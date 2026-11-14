@@ -163,6 +163,13 @@ kind `topic` and `tech` only. `HomePage` opens it on its own while the store's
 `edit-interests` button (primary, in a violet card straight under the hero, so it is easy
 to find) reopens it pre-filled and shows the pick count. The dialog is large (`max-w-3xl`,
 a display-size heading, `text-sm` chips) and scrolls inside `92dvh` so it fits a 375px viewport.
+**Talk instead** (`interests-talk`) shows only when `recognitionCtor()` exists and
+`GET /interests/voice` says `available`. Talk mode swaps the chips for `interests-transcript`
+(a one-line privacy notice, the turns, a phase line) with **Stop** (`interests-talk-stop`);
+Save and Skip are disabled meanwhile. Loop: speak, `listen()`, `converse()`, speak the reply; on
+`done` the returned slugs are unioned into the ticked chips — nothing is saved until Save. An
+error shows `interests-talk-error` and leaves the chips as they were. `src/lib/speech.js` holds
+`recognitionCtor`, `listen`, `speak`, `cancelSpeech` so a spec can fake the browser.
 
 **`HomePage`** (`/`) — mostly static; the one personal part is the interests picker
 (below), and nothing else on it is about the signed-in attendee or what is live. It stacks `HeroBar` (`hero`: name, `conference.dates · city`, a

@@ -216,7 +216,7 @@ once on mobile.
   (unless one is `readOnly: true`, exactly one is `agenda: false`, or both pin distinct
   `slot`s) — mark a lane that reads only `readOnly`, and one that writes check-ins or
   ratings but books nothing `agenda: false`. Six attendees × four days are nearly all
-  taken, so a new attendance lane usually has to be `agenda: false`. The interests lanes (`interests.picker`, `interests.filter`) are `agenda: false` too: they write picks only, and each test starts with `DELETE /users/:id/interests` for its attendee to be first-time again. Before claiming a lane, check the whole `LANES` table *and* the read-only fixtures in its
+  taken, so a new attendance lane usually has to be `agenda: false`. The interests lanes (`interests.picker`, `interests.filter`, `interests.voice` — the last fakes `SpeechRecognition`/`speechSynthesis` with `addInitScript`, routes `/api/interests/voice` and `/converse`, and deletes Chromium's own recognition to test the hidden button; the API harness client has `post`, and `setModel` stubs the model, so no test calls Anthropic or needs a key) are `agenda: false` too: they write picks only, and each test starts with `DELETE /users/:id/interests` for its attendee to be first-time again. Before claiming a lane, check the whole `LANES` table *and* the read-only fixtures in its
   comment: the promotion test picks its session (and therefore its day) at runtime, so the
   day it occupies is not visible in the table.
 - Tests that mutate one shared fixture run on one project only:

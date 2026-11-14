@@ -7,6 +7,9 @@ files:
   - server/db.js
   - server/lib/query.js
   - server/routes/meta.js
+  - server/routes/interests.js
+  - server/lib/interviewer.js
+  - src/lib/speech.js
   - src/main.jsx
   - src/App.jsx
   - src/lib/api.js
@@ -15,6 +18,8 @@ tests:
   - tests/api/contracts.test.js
   - tests/api/endpoints.test.js
   - tests/unit/query.test.js
+  - tests/unit/interviewer.test.js
+  - tests/api/interests-voice.test.js
 related: [seats, agenda, clock, schedule, speakers, venues, seed, testing]
 ---
 
@@ -70,7 +75,19 @@ nests `track`, `room`, `venue`. `hydrateSessions(rows)` adds `speakers` and `tag
 batched `IN (…)` queries — use it for lists; bare `toSession` has no speakers/tags. Also
 `toSpeaker` (nests `socials`), `toVenue`, `toTravel`, `toTrack`, `toRoom`, `toVendor`,
 `toSponsor`, `toUser(row, extra)` (adds `isSpeaker`, `speakerId ?? null`),
+`toInterestTag` (the `{ name, slug, kind }` shape `toInterests` and the voice route share),
 `toAnnouncement`, and `toMinutes('09:00') → 540`.
+
+**Talk to the interests picker** (`server/routes/interests.js`, mounted at `/api/interests`;
+`server/lib/interviewer.js`). `GET /voice` → `{ available }` (true when `ANTHROPIC_API_KEY` is set;
+the key is read only on the server). `POST /converse` takes `{ messages: [{ role, content }] }` (1–40
+turns, each ≤ 2000 chars, ending with a `user` turn, else 400; 503 with no key; 502 when the model
+call fails) and answers `{ reply, done, tags: [{ name, slug, kind }] }`. The model call is a plain
+`fetch` to the Messages API (`ANTHROPIC_MODEL`, default `claude-haiku-4-5`) answering JSON in text,
+parsed leniently; `matchTags(candidates, vocabulary)` is the pure rule that keeps only existing
+`topic`/`tech` slugs, and the 8th user turn forces `done`. Tests swap the model with
+`setModel(fn)` — no test touches the network or needs a key. Client: `getVoiceStatus()`,
+`converse(messages)` in `api.js`; browser speech in `src/lib/speech.js`.
 
 **Meta endpoints** (`server/routes/meta.js`):
 

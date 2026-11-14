@@ -198,8 +198,10 @@ export const toUser = (row, extra = {}) => ({
 });
 
 /** An attendee's picked topic/tech tags and whether they have been through the picker. */
+export const toInterestTag = (t) => ({ name: t.name, slug: t.slug, kind: t.kind });
+
 export const toInterests = (rows, seen) => ({
-  tags: rows.map((t) => ({ name: t.name, slug: t.slug, kind: t.kind })),
+  tags: rows.map(toInterestTag),
   seen: !!seen,
 });
 

@@ -184,7 +184,7 @@ describe('Every endpoint answers', () => {
     // Paths this file or its siblings drive. Keep in step with server/routes/.
     const covered = [
       'GET meta/bootstrap', 'GET meta/venues', 'GET meta/vendors', 'GET meta/sponsors',
-      'GET meta/announcements', 'GET meta/live',
+      'GET meta/announcements', 'GET meta/live', 'GET interests/voice',
       'GET sessions/', 'GET sessions/:id', 'GET sessions/:id.ics',
       'GET speakers/', 'GET speakers/:id',
       'GET users/', 'GET users/:id', 'GET users/:id/today', 'GET users/:id/schedule',

@@ -171,7 +171,8 @@ test('talk instead is hidden without speech recognition or without a key', async
   const at = `${lane.day}T${MID_SESSION_TIME}`;
   const [a] = (await tagsOfKind(request)).filter((t) => t.kind === 'topic' || t.kind === 'tech');
 
-  // key present, browser cannot listen
+  // key present, browser cannot listen (Chromium ships recognition, so remove it)
+  await page.addInitScript(() => { delete window.SpeechRecognition; delete window.webkitSpeechRecognition; });
   await page.route('**/api/interests/voice', (r) => r.fulfill({ json: { available: true } }));
   await visit(page, '/', { as: lane.user, at, firstVisit: true });
   await expect(page.getByTestId(`interest-${a.slug}`)).toBeVisible();
