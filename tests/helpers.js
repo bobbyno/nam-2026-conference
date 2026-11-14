@@ -151,6 +151,8 @@ export const LANES = {
   // Picks and the picker's seen flag only — nothing is booked.
   'interests.picker': { desktop: { user: kenji, day: 0, agenda: false },  mobile: { user: marcus, day: 1, agenda: false } },
   'interests.filter': { desktop: { user: sofia, day: 0, agenda: false },  mobile: { user: abraham, day: 1, agenda: false } },
+  // Talk mode ticks chips only; nothing is saved or booked.
+  'interests.voice':  { desktop: { user: andy, day: 3, agenda: false },    mobile: { user: jonas, day: 3, agenda: false } },
   'agenda.page':      { desktop: { user: andy, day: 1 },                  mobile: { user: jonas, day: 1 } },
 };
 

@@ -100,3 +100,90 @@ test('For you narrows the schedule in list and grid requests and combines with a
   await expect(page.getByTestId('result-count')).toHaveText(`${both.length} session${both.length === 1 ? '' : 's'}`);
   expect(errors).toEqual([]);
 });
+
+/** A browser that can listen and speak: one utterance per listen(), spoken text recorded. */
+async function fakeSpeech(page) {
+  await page.addInitScript(() => {
+    window.__spoken = [];
+    window.SpeechRecognition = class {
+      start() {
+        setTimeout(() => {
+          this.onresult?.({ results: [[{ transcript: 'I build AI things' }]] });
+          this.onend?.();
+        }, 50);
+      }
+      stop() { this.onend?.(); }
+      abort() {}
+    };
+    Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: {
+      speak(u) { window.__spoken.push(u.text); setTimeout(() => u.onend?.(), 10); },
+      cancel() {},
+    } });
+    window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
+  });
+}
+
+test('talk instead ticks the matching tags, which the attendee edits and saves', async ({ page, request }, testInfo) => {
+  const errors = failOnPageErrors(page);
+  const lane = await laneFor('interests.voice', testInfo);
+  await reset(request, lane.user);
+  const at = `${lane.day}T${MID_SESSION_TIME}`;
+  const [a, b] = (await tagsOfKind(request)).filter((t) => t.kind === 'topic' || t.kind === 'tech');
+  let calls = 0;
+  await page.route('**/api/interests/voice', (r) => r.fulfill({ json: { available: true } }));
+  await page.route('**/api/interests/converse', (r) => {
+    calls += 1;
+    return r.fulfill({ json: calls === 1
+      ? { reply: 'What are you building?', done: false, tags: [] }
+      : { reply: 'Got it, I have ticked two.', done: true, tags: [a, b].map(({ name, slug, kind }) => ({ name, slug, kind })) } });
+  });
+  await fakeSpeech(page);
+
+  await visit(page, '/', { as: lane.user, at, firstVisit: true });
+  await expect(page.getByTestId('interests-picker')).toBeVisible();
+  await page.getByTestId('interests-talk').click();
+  await expect(page.getByTestId('interests-transcript')).toContainText('What are you building?');
+  await shotForPR(page, 'Talking to the interests picker');
+  await expect(page.getByTestId('interests-talk-stop')).toBeHidden({ timeout: 10000 });
+  await expect(page.getByTestId(`interest-${a.slug}`)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId(`interest-${b.slug}`)).toHaveAttribute('aria-pressed', 'true');
+  // nothing is stored until Save
+  expect((await (await request.get(`${API}/users/${lane.user}/interests`)).json()).tags).toEqual([]);
+  expect(await page.evaluate(() => window.__spoken)).toContain('Got it, I have ticked two.');
+
+  await page.getByTestId(`interest-${b.slug}`).click();
+  await page.getByTestId('interests-save').click();
+  await page.reload();
+  await expect(page.getByTestId('edit-interests')).toContainText('(1)');
+
+  // Stop returns to the chips with nothing changed.
+  await page.getByTestId('edit-interests').click();
+  await page.getByTestId('interests-talk').click();
+  await page.getByTestId('interests-talk-stop').click();
+  await expect(page.getByTestId('interests-talk-stop')).toHaveCount(0);
+  await expect(page.getByTestId(`interest-${a.slug}`)).toHaveAttribute('aria-pressed', 'true');
+  expect(errors).toEqual([]);
+});
+
+test('talk instead is hidden without speech recognition or without a key', async ({ page, request }, testInfo) => {
+  const lane = await laneFor('interests.voice', testInfo);
+  await reset(request, lane.user);
+  const at = `${lane.day}T${MID_SESSION_TIME}`;
+  const [a] = (await tagsOfKind(request)).filter((t) => t.kind === 'topic' || t.kind === 'tech');
+
+  // key present, browser cannot listen
+  await page.route('**/api/interests/voice', (r) => r.fulfill({ json: { available: true } }));
+  await visit(page, '/', { as: lane.user, at, firstVisit: true });
+  await expect(page.getByTestId(`interest-${a.slug}`)).toBeVisible();
+  await expect(page.getByTestId('interests-talk')).toHaveCount(0);
+
+  // browser can listen, server has no key
+  await page.unroute('**/api/interests/voice');
+  await page.route('**/api/interests/voice', (r) => r.fulfill({ json: { available: false } }));
+  await fakeSpeech(page);
+  await visit(page, '/', { as: lane.user, at, firstVisit: true });
+  await expect(page.getByTestId(`interest-${a.slug}`)).toBeVisible();
+  await expect(page.getByTestId('interests-talk')).toHaveCount(0);
+  await page.getByTestId(`interest-${a.slug}`).click();
+  await expect(page.getByTestId('interests-save')).toContainText('(1)');
+});
