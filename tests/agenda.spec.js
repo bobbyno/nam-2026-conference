@@ -17,7 +17,7 @@ test('My Agenda lists your seats by day, flags waitlist and clashes, and follows
   await clearAgendaFor(request, lane.user, lane.day);
 
   // Three seats in distinct slots (A < B < C), one waitlist place W that overlaps only A.
-  const open = (await bookableFor(request, lane.user, lane.day)).filter((s) => !s.isFull);
+  const open = (await bookableFor(request, lane.user, lane.day)).filter((s) => s.seatsLeft > 10); // both projects book alike: leave room so neither is queued
   const A = open[0];
   const B = open.find((s) => s.startsAt >= A.endsAt);
   const C = open.find((s) => s.startsAt >= B.endsAt);
