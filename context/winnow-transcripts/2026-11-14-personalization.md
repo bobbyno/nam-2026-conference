@@ -1,0 +1,21 @@
+# Personalize the schedule from picked interests
+
+- **Title:** Personalize the schedule from picked interests
+- **Date:** Unknown (the transcript is undated; Winnow ran on 2026-11-14)
+- **Participants:** Unknown (unnamed speakers in an Otter transcript)
+- **Source:** `transcripts/feature_2_personalization.txt`
+- **Tickets raised:**
+  - [#5 Pick your interests on Home and filter the schedule "For you"](https://github.com/bobbyno/nam-2026-conference/issues/5)
+- **Context updated:** `context/product-context/prd.md`: personalization starts from interests the attendee picks (`topic` and `tech` tags), nothing inferred; `/schedule` gets a "For you" filter; voice input is a later phase. The pull request for #5 updates the engineering docs and CLAUDE.md's "Deliberately unbuilt" Home note.
+- **Set aside:**
+  - The "sliders" idea at 0:47: replaced by picking from a list of interests.
+  - The garbled line at 1:48 ("based on these conferences, how would you say to someone with a personally interested"): no clear requirement.
+  - Voice input and speech-to-text: no transcription key or service exists. Recorded as a later phase, not a ticket.
+  - Suggestions on My Agenda and ranking by match: a possible later ticket.
+  - `audience` and `vibe` tags in the picker: they describe the session, not the attendee's interest.
+  - Filler and meta ("let's be ambitious", the SDK aside, "put that into Winnow", the Otter footer): not requirements.
+- **Q&A:**
+  - *What should the first ticket do with the saved interests?* The picker plus a "For you" filter on `/schedule`.
+  - *How does the attendee reach the picker?* A first-visit modal on Home, with a per-attendee seen flag and a way to reopen it.
+  - *Which tags does it offer?* `topic` and `tech` only.
+  - *How does the filter match?* Any shared tag; with no interests saved the toggle is hidden.

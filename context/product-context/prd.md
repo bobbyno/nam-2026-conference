@@ -27,11 +27,18 @@ you arrive mid-conference and the clock ticks while you watch. Pin it with
   app offers a swap.
 - **My Agenda** — a blank page marked *coming soon*. Building it is the
   workshop: the seats, the per-attendee schedule and today's view are all in
-  the API, waiting for a page.
+  the API, waiting for a page. It is meant as a read-only view of the sessions
+  you already hold, confirmed and waitlisted, by day and in time order — not a
+  way to find or take sessions. Recommendations are the step after.
 - **Check in and rate** — check-in opens 15 minutes before a session and closes
   when it ends; you can rate only what you attended, once it is over.
 - **Schedule** — a grid of rooms by time on desktop, a list on a phone, with
   filters that live in the URL.
+- **Interests** — not built yet. Personalization starts from what the attendee
+  tells the app, Spotify-style: a first-visit picker on Home offers the
+  `topic` and `tech` tags, and a *For you* filter on the schedule narrows it to
+  sessions sharing at least one picked tag. Nothing is inferred from follows or
+  seats. Voice input comes after, once a speech-to-text service is available.
 - **Speakers, venues, sponsors** — a tiered speaker index, the two venues on a
   real map, travel times between them.
 - **Calendar export** — any session as `.ics` from its page; your whole agenda
