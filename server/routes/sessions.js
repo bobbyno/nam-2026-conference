@@ -26,11 +26,11 @@ const competingWith = db.prepare(`${SESSION_SELECT}
 
 /**
  * GET /api/sessions
- * Filters: day, trackSlug, tagSlug, venueId, roomId, level, format, speakerId, q, reservedBy, followedBy
+ * Filters: day, trackSlug, tagSlug, venueId, roomId, level, format, speakerId, q, reservedBy, followedBy, interestedIn
  * Sort:    time (default) | rating | popularity
  */
 sessionsRouter.get('/', (req, res) => {
-  const { day, trackSlug, tagSlug, venueId, roomId, level, format, speakerId, q, reservedBy, followedBy, sort } = req.query;
+  const { day, trackSlug, tagSlug, venueId, roomId, level, format, speakerId, q, reservedBy, followedBy, interestedIn, sort } = req.query;
   const where = [];
   const args = [];
 
@@ -61,6 +61,14 @@ sessionsRouter.get('/', (req, res) => {
       JOIN speaker_follows sf ON sf.speaker_id = ss.speaker_id
       WHERE ss.session_id = s.id AND sf.user_id = ?)`);
     args.push(followedBy);
+  }
+  if (interestedIn) {
+    // sessions sharing at least one tag this attendee picked; no picks, no matches
+    where.push(`EXISTS (
+      SELECT 1 FROM session_tags st
+      JOIN user_interests ui ON ui.tag_id = st.tag_id
+      WHERE st.session_id = s.id AND ui.user_id = ?)`);
+    args.push(interestedIn);
   }
   if (reservedBy) {
     where.push('EXISTS (SELECT 1 FROM reservations r WHERE r.session_id = s.id AND r.user_id = ?)');

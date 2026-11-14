@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useConference, useFetch } from '../lib/store.jsx';
 import { useDocumentTitle } from '../lib/useDocumentTitle.js';
 import * as api from '../lib/api.js';
@@ -8,6 +9,7 @@ import { Reveal } from '../components/Reveal.jsx';
 import { HeroMedia } from '../components/HeroMedia.jsx';
 import { Button, Chip, cx } from '../components/ui.jsx';
 import { Icon } from '../components/Icon.jsx';
+import { InterestsPicker } from '../components/InterestsPicker.jsx';
 
 /**
  * A slim bar, not a brochure.
@@ -127,18 +129,51 @@ function LatestAnnouncement() {
   );
 }
 
+/** Reopens the picker; shows how many topics and technologies are picked. */
+function InterestsBar({ onEdit }) {
+  const { interestSlugs } = useConference();
+  const n = interestSlugs.size;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-violet-400/30 bg-violet-500/10 px-5 py-4">
+      <div className="flex items-center gap-3">
+        <Icon name="star" className="size-5 shrink-0 text-violet-300" />
+        <p className="text-sm text-ink">
+          {n ? 'The schedule can show just what you picked, under For you.' : 'Tell us what you are here for and get a For you schedule.'}
+        </p>
+      </div>
+      <Button variant="primary" onClick={onEdit} data-testid="edit-interests">
+        {n ? `Your interests (${n})` : 'Pick your interests'}
+      </Button>
+    </div>
+  );
+}
+
 export function HomePage() {
-  const { conference } = useConference();
+  const { conference, tags, interestSlugs, interestsSeen, saveInterests } = useConference();
+  const [editing, setEditing] = useState(false);
   useDocumentTitle("ORBIT '26");
+
+  // First visit opens on its own; closing it any way counts as seen.
+  const firstTime = interestsSeen === false;
+  const pickable = tags.filter((t) => t.kind === 'topic' || t.kind === 'tech');
 
   return (
     // Sections hide themselves when empty; hide their Reveal wrapper too, or
     // each one leaves a blank gap in the stack.
     <div className="space-y-8 [&>:empty]:hidden">
       <HeroBar conference={conference} />
+      <InterestsBar onEdit={() => setEditing(true)} />
       <QuickLinks />
       <Reveal><LatestAnnouncement /></Reveal>
       <SponsorMarquee />
+      {(firstTime || editing) && (
+        <InterestsPicker
+          tags={pickable}
+          picked={interestSlugs}
+          onSave={async (slugs) => { await saveInterests(slugs); setEditing(false); }}
+          onClose={() => (firstTime ? saveInterests([...interestSlugs]) : setEditing(false))}
+        />
+      )}
     </div>
   );
 }

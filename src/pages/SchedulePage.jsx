@@ -19,7 +19,7 @@ const VIEWS = [
 ];
 
 export function SchedulePage() {
-  const { days, tracks, venues, formats, levels, tags, reservations, clock } = useConference();
+  const { days, tracks, venues, formats, levels, tags, reservations, clock, currentUserId, interestSlugs } = useConference();
   useDocumentTitle('Schedule');
   const [params, setParams] = useSearchParams();
   const [railOpen, setRailOpen] = useState(false);
@@ -32,6 +32,8 @@ export function SchedulePage() {
     format: params.get('format') ?? ALL,
     tag: params.get('tag') ?? ALL,
     q: params.get('q') ?? '',
+    // only meaningful while the attendee has picks
+    forYou: params.get('forYou') === '1' && interestSlugs.size > 0 ? '1' : ALL,
   };
   // A horizontally scrolling matrix is a poor default on a phone, so the grid
   // is only the default where there is room for it. An explicit ?view= wins.
@@ -54,12 +56,13 @@ export function SchedulePage() {
       format: filters.format,
       tagSlug: filters.tag,
       q: filters.q,
+      interestedIn: filters.forYou === '1' ? currentUserId : undefined,
     }),
-    [filters.day, filters.track, filters.venue, filters.level, filters.format, filters.tag, filters.q],
+    [filters.day, filters.track, filters.venue, filters.level, filters.format, filters.tag, filters.q, filters.forYou, currentUserId],
   );
 
   const sessions = data ?? [];
-  const activeKeys = ['track', 'venue', 'level', 'format', 'tag', 'q'].filter((k) => filters[k] && filters[k] !== ALL);
+  const activeKeys = ['track', 'venue', 'level', 'format', 'tag', 'q', 'forYou'].filter((k) => filters[k] && filters[k] !== ALL);
   // Keep a view the user chose, never the list a filter forced.
   const clearAll = () => {
     const next = new URLSearchParams({ day: filters.day });
@@ -75,6 +78,7 @@ export function SchedulePage() {
    */
   const BLOCKERS = [
     ['q', 'a search'],
+    ['forYou', 'a For you filter'],
     ['track', 'a track filter'],
     ['tag', 'a topic filter'],
     ['level', 'a level filter'],
@@ -158,6 +162,17 @@ export function SchedulePage() {
           })}
         </div>
       </div>
+
+      {interestSlugs.size > 0 && (
+        <button type="button" aria-pressed={filters.forYou === '1'} data-testid="for-you-toggle"
+          onClick={() => set('forYou', filters.forYou === '1' ? ALL : '1')}
+          className={cx('flex w-full items-center justify-between rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors',
+            filters.forYou === '1' ? 'border-violet-400/50 bg-violet-500/15 text-ink'
+              : 'border-hairline bg-raised text-muted hover:bg-overlay hover:text-ink')}>
+          For you
+          <span className="font-mono text-[10px] text-faint">{interestSlugs.size} picked</span>
+        </button>
+      )}
 
       <div>
         <h3 className="sr-only text-[11px] font-semibold uppercase tracking-wider text-faint lg:not-sr-only lg:mb-2 lg:block">Track</h3>

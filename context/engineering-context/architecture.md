@@ -60,7 +60,7 @@ sets the `.ics` host.
 EXISTS` throughout); `migrate()` execs it, `dropAll()` drops every table child-first.
 Tables: `users`, `venues`, `venue_travel`, `tracks`, `tags`, `rooms`, `speakers`,
 `sessions`, `session_tags`, `session_speakers`, `reservations`, `check_ins`,
-`speaker_follows`, `ratings`, `vendors`, `sponsors`, `announcements`. Column-level detail:
+`speaker_follows`, `user_interests`, `ratings`, `vendors`, `sponsors`, `announcements`. Column-level detail:
 `context/engineering-context/data-model.md`.
 
 **Mappers** (`server/lib/query.js`). `SESSION_SELECT` joins session → track → room → venue
@@ -93,11 +93,13 @@ the routes. `/opening-presentation`, `/product-presentation` and `/engineering-p
 (`conference`, `venues`, `travel`, `tracks`, `tags`, `rooms`, `users`, `days`, `formats`,
 `levels`, `cuisines`) and adds: `ready`, `error`, `clock` (from `useConferenceClock(days)`),
 `currentUser`, `currentUserId`, `setCurrentUserId`; follows — `followingIds`,
-`isFollowing(id)`, `toggleFollow(id)`; seats — `reservations` (Map sessionId →
+`isFollowing(id)`, `toggleFollow(id)`; interests — `interestSlugs` (Set of topic/tech
+slugs), `interestsSeen` (`null` until loaded), `saveInterests(slugs)` (`PUT
+/users/:id/interests`; `api.getInterests`/`saveInterests`, mapper `toInterests`); seats — `reservations` (Map sessionId →
 `'confirmed'|'waitlisted'`), `reservationFor(id)`, `onAgenda(id)`, `seatCounts`,
 `seatsFor(id)`, `reserveSeat`, `releaseSeat`, `toggleSeat`, `conflict`,
 `resolveConflict(swap)`; lookups — `trackBySlug`, `venueById`, `roomById`.
-Changing `currentUserId` writes `orbit:currentUserId`, clears follows/reservations, then
+Changing `currentUserId` writes `orbit:currentUserId`, clears follows/reservations/interests, then
 reloads them from `GET /users/:id`. `seatCounts` holds live counts from seat responses so
 every card updates without refetching; read `seatsFor(id)` before the page's payload.
 

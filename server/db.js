@@ -37,7 +37,9 @@ CREATE TABLE IF NOT EXISTS users (
   ticket_tier TEXT NOT NULL DEFAULT 'Standard',
   interests   TEXT NOT NULL DEFAULT '',
   -- Attendees who are also presenting link to their speakers row.
-  speaker_id  INTEGER REFERENCES speakers(id)
+  speaker_id  INTEGER REFERENCES speakers(id),
+  -- has this attendee been shown (and closed) the interests picker on Home?
+  interests_seen INTEGER NOT NULL DEFAULT 0
 );
 
 -- Two physical sites, roughly 6 miles apart on opposite ends of the Strip.
@@ -84,6 +86,13 @@ CREATE TABLE IF NOT EXISTS tags (
   name  TEXT NOT NULL UNIQUE,
   slug  TEXT NOT NULL UNIQUE,
   kind  TEXT NOT NULL DEFAULT 'topic'
+);
+
+-- Topic and tech tags an attendee picked on Home; drives the schedule's "For you".
+CREATE TABLE IF NOT EXISTS user_interests (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  tag_id  INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (user_id, tag_id)
 );
 
 CREATE TABLE IF NOT EXISTS rooms (
@@ -270,6 +279,7 @@ export function dropAll() {
     DROP TABLE IF EXISTS check_ins;
     DROP TABLE IF EXISTS reservations;
     DROP TABLE IF EXISTS speaker_follows;
+    DROP TABLE IF EXISTS user_interests;
     DROP TABLE IF EXISTS session_tags;
     DROP TABLE IF EXISTS session_speakers;
     DROP TABLE IF EXISTS sessions;

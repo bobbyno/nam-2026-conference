@@ -31,6 +31,7 @@ Approximate counts from a fresh seed. The tables attendees write to drift as you
 | `session_speakers` | ~195 | Many-to-many, with a `role` (Speaker / Moderator / Host) |
 | `session_tags` | ~980 | Many-to-many |
 | `users` | 6 | Attendees. No passwords — there is no auth |
+| `user_interests` | 0 | Topic/tech tags an attendee picked on Home (PK user+tag); drives the schedule's For you. `users.interests_seen` (0/1) records that the picker was shown; the older `users.interests` text is seed flavour only |
 | `reservations` | ~60 | An attendee's agenda. Holds a real seat; `status` is `confirmed` or `waitlisted` |
 | `speaker_follows` | ~20 | Follow button on a speaker's profile; only the speaker pages read it |
 | `ratings` | ~10 | Only submittable by someone who checked in, once the session is over |
@@ -76,6 +77,7 @@ venues ──< rooms ──< sessions >── tracks
                         └──< ratings >─────────── users
 
 users ──< speaker_follows >── speakers
+users ──< user_interests >── tags
 
 users.speaker_id ──> speakers.id     (set for attendees who are also presenting)
 venues ──< vendors, sponsors, announcements

@@ -9,9 +9,12 @@ files:
   - src/components/SessionCard.jsx
   - src/pages/SessionPage.jsx
   - server/routes/sessions.js
+  - src/components/InterestsPicker.jsx
 tests:
   - tests/schedule.spec.js
   - tests/session.spec.js
+  - tests/interests.spec.js
+  - tests/api/interests.test.js
 related: [seats, attendance, agenda, venues, speakers, ui, clock]
 ---
 
@@ -36,8 +39,17 @@ and a bound `?` to `args`:
 | `tagSlug` | `EXISTS` on `session_tags` ⨝ `tags` |
 | `speakerId` | `EXISTS` on `session_speakers` |
 | `followedBy` | `EXISTS` sessions by speakers in that user's `speaker_follows` (no UI sends it yet; `api.getFollowedSessions`) |
+| `interestedIn` | `EXISTS` a `session_tags` row whose tag is in that user's `user_interests`; no picks matches nothing (the UI hides the toggle then) |
 | `reservedBy` | `EXISTS` any reservation (confirmed **or** waitlisted) |
 | `sort` | `rating` → avg_rating, rating_count desc · `popularity` → fill ratio desc · default `s.day, s.starts_at, r.name` |
+
+**For you** (`?forYou=1`, `for-you-toggle`, `aria-pressed`) sends `interestedIn: currentUserId`.
+The toggle renders only when `interestSlugs.size > 0`, and a `forYou` param is ignored
+without picks. It is a `BLOCKERS` entry, so with it on the grid is unavailable and the
+list shows with the usual "Show whole day" notice; it composes with day, track and the
+other filters. Picks are set from Home (ui doc), via `PUT /api/users/:id/interests`
+(`{ tagSlugs }`, topic/tech slugs only, else 400; also sets `interests_seen`), `GET` and
+`DELETE` (back to first-time) on the same path.
 
 Result is `hydrateSessions(...)` (speakers + tags). To add a filter: one `if`
 here, then pass it through `api.getSessions(filters)`; `qs()` in `src/lib/api.js`

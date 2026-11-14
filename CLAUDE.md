@@ -10,8 +10,9 @@ The personal side of the app is left for workshop teams to build, so it is
 blank on purpose — build it when a ticket asks, never as a side effect of
 another change:
 
-- **Home** is static: a hero, links into the app, the latest announcement and
-  the sponsors. Nothing on it is about the signed-in attendee.
+- **Home** is mostly static: a hero, links into the app, the latest announcement and
+  the sponsors. The only personal part is the interests picker (topic/tech tags
+  that power **For you** on the schedule); nothing else on it is about the signed-in attendee.
 - **Following** works on the speaker pages, but nothing shows what you follow
   outside them — that, like your seats, is for Home to use (My Agenda is built: a read-only list of your seats by day).
 

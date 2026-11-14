@@ -89,9 +89,12 @@ instead of silently testing another worktree's app.
 - `conferenceDays()` → the four ISO dates from `/bootstrap`, cached per worker.
 - `momentOn(dayIndex, 'HH:MM')` → `'YYYY-MM-DDTHH:MM'`; `MID_SESSION_TIME = '10:30'`
   (inside the 10:15 slot).
-- `visit(page, path = '/', { as = ATTENDEES.jonas, at = null })` — an init script sets
-  `orbit:currentUserId` and sets or **removes** `orbit:clockAt`, then `goto` and waits for
-  the `banner` role.
+- `visit(page, path = '/', { as = ATTENDEES.jonas, at = null, firstVisit = false })` — an
+  init script sets `orbit:currentUserId` and sets or **removes** `orbit:clockAt`, then `goto`
+  and waits for the `banner` role. Unless `firstVisit`, it also routes `GET
+  /users/*/interests` to answer `seen: true` (real picks), because seeded attendees have not
+  seen the interests picker and it would cover Home. That stays in the page, so no spec writes
+  the shared seen flag; only `tests/interests.spec.js` passes `firstVisit: true`.
 - `failOnPageErrors(page, errors = [])` → array filled with console errors and page errors.
 - `waitForResults(page, testId = 'result-count')` — waits until that testid stops saying Loading.
 - `clearAgendaFor(request, userId, day)` — releases every seat and waitlist place that
@@ -213,7 +216,7 @@ once on mobile.
   (unless one is `readOnly: true`, exactly one is `agenda: false`, or both pin distinct
   `slot`s) — mark a lane that reads only `readOnly`, and one that writes check-ins or
   ratings but books nothing `agenda: false`. Six attendees × four days are nearly all
-  taken, so a new attendance lane usually has to be `agenda: false`. Before claiming a lane, check the whole `LANES` table *and* the read-only fixtures in its
+  taken, so a new attendance lane usually has to be `agenda: false`. The interests lanes (`interests.picker`, `interests.filter`) are `agenda: false` too: they write picks only, and each test starts with `DELETE /users/:id/interests` for its attendee to be first-time again. Before claiming a lane, check the whole `LANES` table *and* the read-only fixtures in its
   comment: the promotion test picks its session (and therefore its day) at runtime, so the
   day it occupies is not visible in the table.
 - Tests that mutate one shared fixture run on one project only:
