@@ -7,7 +7,8 @@ const GROUPS = [
 ];
 
 /**
- * First-visit picker: which topics and technologies are you here for?
+ * First-visit picker, opened by itself until the attendee saves or skips:
+ * which topics and technologies are you here for?
  * Only `topic` and `tech` tags are offered — audience and vibe describe a
  * session's fit, not an interest. Skip saves nothing but still counts as seen.
  */
@@ -50,23 +51,23 @@ export function InterestsPicker({ tags, picked, onSave, onClose }) {
       <button type="button" aria-label="Close" onClick={onClose} disabled={busy}
         className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
       <div ref={ref} tabIndex={-1}
-        className="glass relative flex max-h-[90dvh] w-full max-w-xl animate-rise flex-col rounded-t-2xl border border-hairline p-5 shadow-2xl shadow-black/70 focus:outline-none sm:rounded-2xl sm:p-6">
-        <h2 id="interests-title" className="font-display text-xl leading-tight">What are you here for?</h2>
-        <p className="mt-1 text-[13px] text-muted">
+        className="glass relative flex max-h-[92dvh] w-full max-w-3xl animate-rise flex-col rounded-t-2xl border border-violet-400/30 p-6 shadow-2xl shadow-black/70 focus:outline-none sm:rounded-3xl sm:p-10">
+        <h2 id="interests-title" className="font-display text-2xl leading-tight sm:text-4xl">What are you here for?</h2>
+        <p className="mt-2 text-sm text-muted sm:text-base">
           Pick the topics and tech you care about and the schedule can show just those, under <b>For you</b>.
         </p>
 
-        <div className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto">
+        <div className="mt-6 min-h-0 flex-1 space-y-6 overflow-y-auto">
           {GROUPS.map(({ kind, label }) => (
             <section key={kind}>
-              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-faint">{label}</h3>
-              <div className="flex flex-wrap gap-1.5">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-faint">{label}</h3>
+              <div className="flex flex-wrap gap-2">
                 {tags.filter((t) => t.kind === kind).map((t) => {
                   const on = chosen.has(t.slug);
                   return (
                     <button key={t.slug} type="button" aria-pressed={on} onClick={() => toggle(t.slug)}
                       data-testid={`interest-${t.slug}`}
-                      className={cx('rounded-full border px-2.5 py-1 text-[12px] font-medium transition-colors',
+                      className={cx('rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors',
                         on ? 'border-violet-400/50 bg-violet-500/15 text-ink' : 'border-hairline text-muted hover:text-ink')}>
                       {t.name}
                     </button>
@@ -77,7 +78,7 @@ export function InterestsPicker({ tags, picked, onSave, onClose }) {
           ))}
         </div>
 
-        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div className="mt-8 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="ghost" disabled={busy} onClick={() => save(picked ? [...picked] : [])} data-testid="interests-skip">
             Skip for now
           </Button>

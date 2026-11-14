@@ -21,7 +21,7 @@ test('first-time picker, saved picks, reopen and clear, per attendee', async ({ 
   const allowed = new Set(tags.filter((t) => t.kind === 'topic' || t.kind === 'tech').map((t) => t.slug));
   const [a, b] = [...allowed];
 
-  await visit(page, '/', { as: lane.user, at });
+  await visit(page, '/', { as: lane.user, at, firstVisit: true });
   const picker = page.getByTestId('interests-picker');
   await expect(picker).toBeVisible();
   const chips = await picker.locator('[data-testid^="interest-"]').evaluateAll((els) => els.map((e) => e.dataset.testid.replace('interest-', '')));
@@ -37,13 +37,15 @@ test('first-time picker, saved picks, reopen and clear, per attendee', async ({ 
   await expect(page.getByTestId('edit-interests')).toContainText('(2)');
   await expect(picker).toHaveCount(0);
 
-  // Another attendee has their own state: seeded attendees have already seen it.
-  await visit(page, '/', { as: other, at });
-  await expect(page.getByTestId('edit-interests')).toContainText('Pick your interests');
-  await expect(picker).toHaveCount(0);
+  // Another attendee has their own state: seeded attendees have not seen it yet.
+  // Only look — closing it would write that shared attendee's seen flag.
+  await visit(page, '/', { as: other, at, firstVisit: true });
+  await expect(picker).toBeVisible();
+  await expect(page.getByTestId('interest-' + a)).toHaveAttribute('aria-pressed', 'false');
 
   // Reopen pre-filled, change, save; then clear everything.
-  await visit(page, '/', { as: lane.user, at });
+  await visit(page, '/', { as: lane.user, at, firstVisit: true });
+  await expect(picker).toHaveCount(0);
   await page.getByTestId('edit-interests').click();
   await expect(page.getByTestId(`interest-${a}`)).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId(`interest-${a}`).click();

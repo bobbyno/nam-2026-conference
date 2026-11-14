@@ -89,9 +89,12 @@ instead of silently testing another worktree's app.
 - `conferenceDays()` → the four ISO dates from `/bootstrap`, cached per worker.
 - `momentOn(dayIndex, 'HH:MM')` → `'YYYY-MM-DDTHH:MM'`; `MID_SESSION_TIME = '10:30'`
   (inside the 10:15 slot).
-- `visit(page, path = '/', { as = ATTENDEES.jonas, at = null })` — an init script sets
-  `orbit:currentUserId` and sets or **removes** `orbit:clockAt`, then `goto` and waits for
-  the `banner` role.
+- `visit(page, path = '/', { as = ATTENDEES.jonas, at = null, firstVisit = false })` — an
+  init script sets `orbit:currentUserId` and sets or **removes** `orbit:clockAt`, then `goto`
+  and waits for the `banner` role. Unless `firstVisit`, it also routes `GET
+  /users/*/interests` to answer `seen: true` (real picks), because seeded attendees have not
+  seen the interests picker and it would cover Home. That stays in the page, so no spec writes
+  the shared seen flag; only `tests/interests.spec.js` passes `firstVisit: true`.
 - `failOnPageErrors(page, errors = [])` → array filled with console errors and page errors.
 - `waitForResults(page, testId = 'result-count')` — waits until that testid stops saying Loading.
 - `clearAgendaFor(request, userId, day)` — releases every seat and waitlist place that

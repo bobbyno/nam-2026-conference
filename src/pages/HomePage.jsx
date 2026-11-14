@@ -134,11 +134,14 @@ function InterestsBar({ onEdit }) {
   const { interestSlugs } = useConference();
   const n = interestSlugs.size;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3">
-      <p className="text-[13px] text-muted">
-        {n ? 'The schedule can show just what you picked, under For you.' : 'Tell us what you are here for and get a For you schedule.'}
-      </p>
-      <Button size="sm" onClick={onEdit} data-testid="edit-interests">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-violet-400/30 bg-violet-500/10 px-5 py-4">
+      <div className="flex items-center gap-3">
+        <Icon name="star" className="size-5 shrink-0 text-violet-300" />
+        <p className="text-sm text-ink">
+          {n ? 'The schedule can show just what you picked, under For you.' : 'Tell us what you are here for and get a For you schedule.'}
+        </p>
+      </div>
+      <Button variant="primary" onClick={onEdit} data-testid="edit-interests">
         {n ? `Your interests (${n})` : 'Pick your interests'}
       </Button>
     </div>
@@ -159,8 +162,8 @@ export function HomePage() {
     // each one leaves a blank gap in the stack.
     <div className="space-y-8 [&>:empty]:hidden">
       <HeroBar conference={conference} />
-      <QuickLinks />
       <InterestsBar onEdit={() => setEditing(true)} />
+      <QuickLinks />
       <Reveal><LatestAnnouncement /></Reveal>
       <SponsorMarquee />
       {(firstTime || editing) && (

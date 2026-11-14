@@ -44,7 +44,21 @@ export async function momentOn(dayIndex, time) {
 export const MID_SESSION_TIME = '10:30';   // inside the 10:15 slot
 
 /** Open a route as a given attendee, optionally with the clock pinned. */
-export async function visit(page, path = '/', { as = ATTENDEES.jonas, at = null } = {}) {
+export async function visit(page, path = '/', { as = ATTENDEES.jonas, at = null, firstVisit = false } = {}) {
+  // Seeded attendees have not seen the interests picker, which opens over Home.
+  // Report it as seen to this page alone (picks stay real), so no other spec
+  // writes the shared seen flag that the picker spec depends on.
+  if (!firstVisit && !page.__interestsSeen) {
+    page.__interestsSeen = true;
+    await page.route('**/api/users/*/interests', async (route) => {
+      if (route.request().method() !== 'GET') return route.continue();
+      // the page may navigate on before this answers; that request no longer matters
+      try {
+        const res = await route.fetch();
+        await route.fulfill({ response: res, json: { ...(await res.json()), seen: true } });
+      } catch { /* request or page gone */ }
+    });
+  }
   await page.addInitScript(({ id, clockAt }) => {
     window.localStorage.setItem('orbit:currentUserId', String(id));
     if (clockAt) window.localStorage.setItem('orbit:clockAt', clockAt);

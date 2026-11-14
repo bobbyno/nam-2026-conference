@@ -59,9 +59,9 @@ describe('interests', () => {
     assert.deepEqual(await api.json('/users/3/interests'), { tags: [], seen: false });
   });
 
-  test('seeded attendees have already seen the picker', async () => {
+  test('seeded attendees have not seen the picker yet, so it opens on Home', async () => {
     const fresh = await api.json('/users/4/interests');
-    assert.deepEqual(fresh, { tags: [], seen: true });
+    assert.deepEqual(fresh, { tags: [], seen: false });
   });
 });
 

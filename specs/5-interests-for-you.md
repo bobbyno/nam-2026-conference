@@ -5,7 +5,7 @@ A first-time attendee opening Home gets a modal listing the `topic` and `tech` t
 
 ## Where
 - `server/db.js` — `SCHEMA`: add `user_interests (user_id, tag_id, PK both, FK cascade)` and `users.interests_seen INTEGER NOT NULL DEFAULT 0`; add `user_interests` to `dropAll()` before `tags`/`users`. (The existing free-text `users.interests` column is unrelated legacy seed data; leave it.)
-- `server/seed.js` — after users are inserted, set `interests_seen = 1` for every seeded attendee, so existing specs that open Home are not met by a modal. No seeded picks. Deterministic, no `Math.random()`.
+- `server/seed.js` — no picks seeded and `interests_seen` left at 0, so every seeded attendee meets the picker on Home until they save or skip. `visit()` in `tests/helpers.js` routes `GET /interests` to `seen: true` for every spec but the picker's (`firstVisit: true`), so no spec writes the shared flag.
 - `server/lib/query.js` — `toInterests(rows, seen)` mapper returning `{ tags: [{ name, slug, kind }], seen }`; `toUser` unchanged.
 - `server/routes/users.js` — `GET /:id/interests`; `PUT /:id/interests` body `{ tagSlugs: [] }` replaces the set in one transaction and sets seen; 400 on a slug that is not a `topic`/`tech` tag; 404 unknown attendee; `DELETE /:id/interests` clears picks and seen (lets a test or a future "reset" return to first-time).
 - `server/routes/sessions.js` — `GET /`: new `interestedIn` param (user id) adding `EXISTS (session_tags st JOIN user_interests ui ON ui.tag_id = st.tag_id WHERE st.session_id = s.id AND ui.user_id = ?)`. Zero picks therefore returns nothing, which is why the UI hides the toggle then.
@@ -30,7 +30,7 @@ A first-time attendee opening Home gets a modal listing the `topic` and `tech` t
 
 ## Decisions
 1. No criterion already holds on main (no interests store, picker or filter exists); nothing to re-read.
-2. Seed every attendee as already seen, with no picks, so no existing spec or demo opens on a modal, and "first time" is produced by `DELETE /api/users/:id/interests` — OK?
+2. Every seeded attendee starts unseen, so the picker opens on Home for anyone with no picks who has not dismissed it (agenda or not). Changed after review on the preview: seeding everyone as seen made the picker impossible to find, and every seeded attendee holds seats, so gating on an empty agenda would never show it.
 3. Add a **Skip** that marks seen without picks, so a closed picker does not nag; the ticket only names Save — OK?
 4. With For you on, grid is treated as unavailable (a `BLOCKERS` entry, like track), so the page falls back to list with the existing "Show whole day" notice; "in grid and list view" is proved as the toggle working under both requested views — OK?
 5. The URL key is `forYou=1`, and a stale `forYou` with no picks is ignored — OK?
