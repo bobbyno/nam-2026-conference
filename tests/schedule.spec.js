@@ -37,6 +37,58 @@ test.describe('Schedule', () => {
     await expect(page.getByTestId('result-count')).not.toHaveText(first);
   });
 
+  test('the track filter takes several tracks, adds and removes them, and opens from a link', async ({ page }) => {
+    const days = await conferenceDays();
+    const boot = await (await fetch(`${API}/bootstrap`)).json();
+    const [a, b] = boot.tracks;
+    const label = (t) => t.shortName ?? t.name;
+    const apiCount = async (slugs) => {
+      const q = slugs.length ? `&trackSlug=${slugs.join(',')}` : '';
+      const res = await fetch(`${API}/sessions?day=${days[0]}${q}`);
+      return (await res.json()).length;
+    };
+    const count = page.getByTestId('result-count');
+    const chip = (t) => page.getByRole('button', { name: label(t), exact: true });
+    const all = page.getByRole('button', { name: 'All', exact: true });
+
+    await visit(page, `/schedule?view=list&day=${days[0]}`);
+    await waitForResults(page);
+    const rail = page.getByRole('button', { name: /^Filters/ });
+    if (await rail.isVisible()) await rail.click();
+
+    await chip(a).click();
+    await chip(b).click();
+    await expect(chip(a)).toHaveAttribute('aria-pressed', 'true');
+    await expect(chip(b)).toHaveAttribute('aria-pressed', 'true');
+    await expect(all).toHaveAttribute('aria-pressed', 'false');
+    await expect(page).toHaveURL(new RegExp(`track=${a.slug}(,|%2C)${b.slug}`));
+    await expect(count).toHaveText(new RegExp(`^${await apiCount([a.slug, b.slug])} sessions?$`));
+    await shotForPR(page, 'two tracks selected in the schedule filter');
+
+    await chip(a).click();
+    await expect(chip(a)).toHaveAttribute('aria-pressed', 'false');
+    await expect(count).toHaveText(new RegExp(`^${await apiCount([b.slug])} sessions?$`));
+
+    await chip(b).click();
+    await expect(all).toHaveAttribute('aria-pressed', 'true');
+    await expect(page).not.toHaveURL(/track=/);
+    await expect(count).toHaveText(new RegExp(`^${await apiCount([])} sessions?$`));
+
+    await visit(page, `/schedule?view=list&day=${days[0]}&track=${a.slug},${b.slug}`);
+    await waitForResults(page);
+    if (await rail.isVisible()) await rail.click();
+    await expect(chip(a)).toHaveAttribute('aria-pressed', 'true');
+    await expect(chip(b)).toHaveAttribute('aria-pressed', 'true');
+    await expect(count).toHaveText(new RegExp(`^${await apiCount([a.slug, b.slug])} sessions?$`));
+
+    await visit(page, `/schedule?view=list&day=${days[0]}&track=${a.slug}`);
+    await waitForResults(page);
+    if (await rail.isVisible()) await rail.click();
+    await expect(chip(a)).toHaveAttribute('aria-pressed', 'true');
+    await expect(chip(b)).toHaveAttribute('aria-pressed', 'false');
+    await expect(count).toHaveText(new RegExp(`^${await apiCount([a.slug])} sessions?$`));
+  });
+
   test('search narrows the list and survives a reload', async ({ page }) => {
     await visit(page, '/schedule?view=list');
     await waitForResults(page);
