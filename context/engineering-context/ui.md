@@ -155,8 +155,16 @@ sticky `glass` header, `<main id="main">`, and the footer.
   `/speakers/<currentUser.speakerId>`, which marks itself "This is you"
   (speakers doc). `tests/switcher.spec.js` covers the switcher and that link.
 
-**`HomePage`** (`/`) — static: nothing on it is about the signed-in attendee or
-what is live. It stacks `HeroBar` (`hero`: name, `conference.dates · city`, a
+**`InterestsPicker`** (`components/InterestsPicker.jsx`, modal built like `ConflictDialog`:
+focus, Escape, scroll lock; testids `interests-picker`, `interest-<slug>` with
+`aria-pressed`, `interests-save`, `interests-skip`). Chips are the bootstrap `tags` of
+kind `topic` and `tech` only. `HomePage` opens it on its own while the store's
+`interestsSeen === false` (closing by any route marks it seen), and `InterestsBar`'s
+`edit-interests` button reopens it pre-filled and shows the pick count. The dialog scrolls
+inside `90dvh` so it fits a 375px viewport.
+
+**`HomePage`** (`/`) — mostly static; the one personal part is the interests picker
+(below), and nothing else on it is about the signed-in attendee or what is live. It stacks `HeroBar` (`hero`: name, `conference.dates · city`, a
 `Day n · time` chip from `clock`, and `Browse today` → `/schedule?day=<clock.day>`
 plus `Speakers` buttons) → `QuickLinks` (`quick-links`, a `nav` of the `LINKS`
 array: Schedule, Speakers, Venues, Food & drink, Expo) → `LatestAnnouncement`

@@ -611,6 +611,8 @@ USERS.forEach((u, i) => {
   uStmt.run(u[0], u[1], u[2], u[3], initialsOf(u[0]), ACCENTS[i * 2 % ACCENTS.length],
     portrait, u[8], u[4], u[5], u[6], u[7], u[9], speakerId);
 });
+// Seeded attendees open Home without the first-time picker; no picks are seeded.
+db.prepare('UPDATE users SET interests_seen = 1').run();
 const users = db.prepare('SELECT * FROM users').all();
 
 /**

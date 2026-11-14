@@ -134,6 +134,9 @@ export const LANES = {
   // smoke.spec.js's "no session in the future carries a rating".
   'attendance.rating-toast':  { desktop: { user: marcus, day: 0, slot: '09:00', agenda: false }, mobile: { user: abraham, day: 0, slot: '09:00', agenda: false } },
   // Books into and releases its own day; no other lane holds this pair.
+  // Picks and the picker's seen flag only — nothing is booked.
+  'interests.picker': { desktop: { user: kenji, day: 0, agenda: false },  mobile: { user: marcus, day: 1, agenda: false } },
+  'interests.filter': { desktop: { user: sofia, day: 0, agenda: false },  mobile: { user: abraham, day: 1, agenda: false } },
   'agenda.page':      { desktop: { user: andy, day: 1 },                  mobile: { user: jonas, day: 1 } },
 };
 

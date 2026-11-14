@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db.js';
-import { SESSION_SELECT, toUser, toSpeaker, toSession } from '../lib/query.js';
+import { SESSION_SELECT, toUser, toSpeaker, toSession, toInterests } from '../lib/query.js';
 import { reserveSeat, releaseSeat, seatState } from '../lib/seats.js';
 import { attendanceState, checkIn, rateSession } from '../lib/attendance.js';
 import { todayFor, scheduleFor } from '../lib/agenda.js';
@@ -25,6 +25,15 @@ const myRatings = db.prepare('SELECT session_id, stars FROM ratings WHERE user_i
 const follow = db.prepare('INSERT OR IGNORE INTO speaker_follows (user_id, speaker_id) VALUES (?, ?)');
 const unfollow = db.prepare('DELETE FROM speaker_follows WHERE user_id = ? AND speaker_id = ?');
 
+const myInterests = db.prepare(`
+  SELECT tg.name, tg.slug, tg.kind FROM user_interests ui JOIN tags tg ON tg.id = ui.tag_id
+  WHERE ui.user_id = ? ORDER BY tg.kind, tg.name`);
+const pickableTag = db.prepare("SELECT id FROM tags WHERE slug = ? AND kind IN ('topic', 'tech')");
+const clearInterests = db.prepare('DELETE FROM user_interests WHERE user_id = ?');
+const addInterest = db.prepare('INSERT OR IGNORE INTO user_interests (user_id, tag_id) VALUES (?, ?)');
+const setSeen = db.prepare('UPDATE users SET interests_seen = ? WHERE id = ?');
+const interestsOf = (user) => toInterests(myInterests.all(user.id), user.interests_seen);
+
 /** Sessions this user is presenting, if their account is linked to a speaker. */
 const speakingSessions = (speakerId) =>
   (speakerId ? presenting.all(speakerId).map((r) => toSession(r)) : []);
@@ -45,6 +54,38 @@ usersRouter.get('/:id', (req, res) => {
     checkIns: myCheckIns.all(row.id).map((c) => c.session_id),
     ratings: myRatings.all(row.id).map((r) => ({ sessionId: r.session_id, stars: r.stars })),
   }));
+});
+
+usersRouter.get('/:id/interests', (req, res) => {
+  const user = getUser.get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'Attendee not found' });
+  res.json(interestsOf(user));
+});
+
+/** Replace the picks (topic/tech tags only) and mark the picker as seen. */
+usersRouter.put('/:id/interests', (req, res) => {
+  const user = getUser.get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'Attendee not found' });
+  const slugs = req.body?.tagSlugs;
+  if (!Array.isArray(slugs)) return res.status(400).json({ error: 'tagSlugs must be a list' });
+  const ids = slugs.map((s) => pickableTag.get(String(s))?.id);
+  if (ids.some((id) => id === undefined)) {
+    return res.status(400).json({ error: 'Interests are topic or tech tags' });
+  }
+  db.transaction(() => {
+    clearInterests.run(user.id);
+    ids.forEach((id) => addInterest.run(user.id, id));
+    setSeen.run(1, user.id);
+  })();
+  res.json(interestsOf(getUser.get(user.id)));
+});
+
+/** Back to first-time: no picks, picker unseen. */
+usersRouter.delete('/:id/interests', (req, res) => {
+  const user = getUser.get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'Attendee not found' });
+  db.transaction(() => { clearInterests.run(user.id); setSeen.run(0, user.id); })();
+  res.json(interestsOf(getUser.get(user.id)));
 });
 
 /** A subscribable feed of everything this attendee holds a seat for. */

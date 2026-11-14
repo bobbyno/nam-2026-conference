@@ -23,6 +23,9 @@ export function ConferenceProvider({ children }) {
     return Number.isFinite(stored) && stored > 0 ? stored : 1;
   });
   const [followingIds, setFollowingIds] = useState(() => new Set());
+  // slugs of the topic/tech tags this attendee picked, and whether they have closed the picker
+  const [interestSlugs, setInterestSlugs] = useState(() => new Set());
+  const [interestsSeen, setInterestsSeen] = useState(null);
   // sessionId -> 'confirmed' | 'waitlisted'
   const [reservations, setReservations] = useState(() => new Map());
   // sessionId -> live seat counts, so a reservation updates every view at once
@@ -42,6 +45,15 @@ export function ConferenceProvider({ children }) {
     // Never let one attendee act on the previous attendee's state.
     setFollowingIds(new Set());
     setReservations(new Map());
+    setInterestSlugs(new Set());
+    setInterestsSeen(null);
+    api.getInterests(currentUserId)
+      .then((i) => {
+        if (!active) return;
+        setInterestSlugs(new Set(i.tags.map((t) => t.slug)));
+        setInterestsSeen(i.seen);
+      })
+      .catch(() => {});
     api.getUser(currentUserId)
       .then((u) => {
         if (!active) return;
@@ -50,6 +62,13 @@ export function ConferenceProvider({ children }) {
       })
       .catch(() => {});
     return () => { active = false; };
+  }, [currentUserId]);
+
+  /** Replace this attendee's picks; saving nothing still marks the picker as seen. */
+  const saveInterests = useCallback(async (slugs) => {
+    const saved = await api.saveInterests(currentUserId, slugs);
+    setInterestSlugs(new Set(saved.tags.map((t) => t.slug)));
+    setInterestsSeen(true);
   }, [currentUserId]);
 
   const toggleFollow = useCallback(async (speakerId) => {
@@ -182,6 +201,9 @@ export function ConferenceProvider({ children }) {
       followingIds,
       isFollowing: (id) => followingIds.has(id),
       toggleFollow,
+      interestSlugs,
+      interestsSeen,
+      saveInterests,
       reservations,
       reservationFor: (id) => reservations.get(id) ?? null,
       seatCounts,
@@ -197,7 +219,7 @@ export function ConferenceProvider({ children }) {
       roomById: Object.fromEntries((data?.rooms ?? []).map((r) => [r.id, r])),
     };
   }, [data, error, clock, currentUserId, followingIds, toggleFollow,
-      reservations, seatCounts, reserveSeat, releaseSeat, toggleSeat,
+      interestSlugs, interestsSeen, saveInterests, reservations, seatCounts, reserveSeat, releaseSeat, toggleSeat,
       conflict, resolveConflict]);
 
   return <ConferenceContext.Provider value={value}>{children}</ConferenceContext.Provider>;

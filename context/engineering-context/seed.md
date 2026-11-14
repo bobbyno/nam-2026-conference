@@ -57,7 +57,7 @@ data at the end of the script, or draw from a separate generator.
    that overwrites the session's title, subtitle, abstract, takeaways, prerequisites and
    all its tags, so the hosts' sessions are their real subjects; format, room, track and
    seats stay as generated. Speakers left with nothing are then paired onto solo sessions.
-7. `USERS` — six attendees (below). Ticket tier `Speaker` sets `speaker_id` by name and
+7. `USERS` — six attendees (below), all with `interests_seen = 1` and no picks, so no spec opens Home on the first-time picker (`DELETE /users/:id/interests` makes one first-time again). Ticket tier `Speaker` sets `speaker_id` by name and
    reuses the speaker portrait; the others get `attendee-00N.jpg`.
 8. Plans. Jonas's cross-town pairs are booked first (Day 1 Aurora 10:15 → Foundry 11:30;
    Day 4 Aurora 09:00 → Foundry 10:15). Then `PLAN_SHAPE[i]` gives each attendee days
