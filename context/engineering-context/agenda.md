@@ -1,13 +1,16 @@
 ---
 area: agenda
-summary: The attendee's own conference — the My Agenda placeholder page, and the endpoints a team builds an agenda on (/users/:id/schedule and /today, the speaker's own sessions, the .ics exports), none of which has a UI yet.
+summary: The attendee's own conference — the My Agenda page (read-only, by day), and the endpoints under it (/users/:id/schedule and /today, the speaker's own sessions, the .ics exports); only /schedule has a UI so far.
 read_when: touching My Agenda, an attendee's day or schedule, suggestions, clashes or booked-hours totals, a speaker's own sessions, or calendar export
 files:
   - server/lib/agenda.js
   - server/lib/ical.js
   - src/pages/MyAgendaPage.jsx
+  - src/lib/agendaDays.js
 tests:
   - tests/home.spec.js
+  - tests/agenda.spec.js
+  - tests/unit/agenda-days.test.js
   - tests/api/agenda.test.js
   - tests/api/calendar.test.js
   - tests/unit/ical.test.js
@@ -16,18 +19,28 @@ related: [seats, attendance, clock, venues, schedule, speakers, ui]
 
 # Agenda
 
-**My Agenda is a placeholder.** `/my-agenda` (`MyAgendaPage`, still in the nav,
-`/my-plan` redirects there) renders a `SectionHeader` and a "Coming soon" panel
-(`agenda-coming-soon`) with a `Browse the schedule` button — nothing else. Workshop
-teams design the page from scratch. Everything underneath it is built and tested:
-adding a session takes a seat (seats doc), and the payloads below are served,
-with matching functions in `src/lib/api.js`. What a day is made of is decided in
+**My Agenda is built, and read-only.** `/my-agenda` (`MyAgendaPage`; `/my-plan`
+redirects) lists your sessions, confirmed and waitlisted, grouped by day in time
+order. It fetches `api.getSchedule` (refetched when the set of reserved ids in the
+store changes, so a session added elsewhere appears) and hands the days to
+`src/lib/agendaDays.js:buildAgendaDays(days, reservationFor)`, which is the
+"Building on it" rule below: the store decides what is listed and its status, and
+conflicts, `totalMinutes` and `waitlistedMinutes` are recomputed, empty days dropped.
+`focusSession(days, clock)` is the confirmed session in progress on `clock.day`, else
+the next one that day, else `null`; `hoursLabel` formats minutes. Rows are
+`SessionCard variant="row" readOnly` (no seat button) in an `<li>`; no swap, no
+resolving a clash here. Test ids: `agenda-day-<date>`, `agenda-booked-<date>`,
+`agenda-waitlist-total-<date>` (only when > 0), `agenda-row-<id>`,
+`agenda-waitlisted-<id>`, `agenda-clash-<id>`, `agenda-focus` (inside the
+highlighted row), `agenda-empty`. Home and Following are still unbuilt. Adding a
+session takes a seat (seats doc), and the payloads below are served, with matching
+functions in `src/lib/api.js`. What a day is made of is decided in
 `server/lib/agenda.js`; routes in `server/routes/users.js` only validate and call it.
 
 ## How it works
 
 **`GET /api/users/:id/schedule`** → `{ user: toUser(row), days: scheduleFor(id) }`.
-Client: `api.getSchedule(userId)` — no UI calls it yet.
+Client: `api.getSchedule(userId)` — My Agenda calls it.
 `agenda.js:scheduleFor` returns one entry per day that has any reservation:
 `{ date, sessions (each with reservation, checkedIn, myStars), conflicts, totalMinutes,
 waitlistedMinutes, venuesVisited }`. `checkedIn` (bool) and `myStars` (number or `null`)
@@ -121,8 +134,7 @@ local `DTSTART`/`DTEND`, `UID:orbit-session-<id>@orbitconf.dev`, LOCATION
 
 ## Where to change…
 
-- The My Agenda page: `MyAgendaPage.jsx`; replace `tests/home.spec.js`'s
-  "My Agenda is a blank canvas" test when the placeholder goes.
+- The My Agenda page: `MyAgendaPage.jsx`, rules in `agendaDays.js` (unit-tested); one walk in `tests/agenda.spec.js` on lane `agenda.page`.
 - A new field on the day payload → `agenda.js:todayFor`; prove it in `tests/api/` with `startApi()`.
 - Suggestion ranking → `agenda.js:suggestionsFor` / `myTopics` / `openInSlot`.
 - Clash or total rules → `agenda.js:scheduleFor`/`clashesIn`, and any client
