@@ -133,6 +133,8 @@ export const LANES = {
   // Rates for real, so it must land on day index 0 — `today` — per
   // smoke.spec.js's "no session in the future carries a rating".
   'attendance.rating-toast':  { desktop: { user: marcus, day: 0, slot: '09:00', agenda: false }, mobile: { user: abraham, day: 0, slot: '09:00', agenda: false } },
+  // Books into and releases its own day; no other lane holds this pair.
+  'agenda.page':      { desktop: { user: andy, day: 1 },                  mobile: { user: jonas, day: 1 } },
 };
 
 /**

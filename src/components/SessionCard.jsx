@@ -60,7 +60,7 @@ function AttendanceStatus({ session, attendance }) {
  * the body, then a footer strip. The bands are what let you scan a wall of
  * these without every card melting into the next.
  */
-export function SessionCard({ session, variant = 'grid', showDay = false, attendance = null }) {
+export function SessionCard({ session, variant = 'grid', showDay = false, attendance = null, readOnly = false }) {
   const { toggleSeat, clock, reservationFor, seatsFor } = useConference();
   const reservation = reservationFor(session.id);
   const onAgenda = Boolean(reservation);
@@ -124,7 +124,7 @@ export function SessionCard({ session, variant = 'grid', showDay = false, attend
               )}
             </div>
           </div>
-          <SeatButton size="sm" status={reservation} ended={isDone} onClick={() => toggleSeat(session.id, session)} />
+          {!readOnly && <SeatButton size="sm" status={reservation} ended={isDone} onClick={() => toggleSeat(session.id, session)} />}
         </div>
       </div>
     );
